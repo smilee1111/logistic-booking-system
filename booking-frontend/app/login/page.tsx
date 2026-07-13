@@ -5,24 +5,32 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { loginSchema, type LoginFormValues } from '@/lib/validators/auth';
 import { loginAction } from '@/app/actions/auth';
 import { useAuth } from '@/context/AuthContext';
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? '';
 
 export default function LoginPage() {
     const router = useRouter();
     const { setUser } = useAuth();
     const [formError, setFormError] = useState<string | null>(null);
+    const [captchaKey, setCaptchaKey] = useState(0);
 
     const {
         register,
         handleSubmit,
+        setValue,
         formState: { errors, isSubmitting },
     } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
 
     async function onSubmit(values: LoginFormValues) {
         setFormError(null);
         const result = await loginAction(values);
+
+        setCaptchaKey((key) => key + 1);
+        setValue('captchaToken', '');
 
         if (!result.success) {
             setFormError(result.message ?? 'Login failed');
@@ -65,6 +73,19 @@ export default function LoginPage() {
                             {...register('password')}
                         />
                         {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
+                    </div>
+
+                    <div className="space-y-1">
+                        <input type="hidden" {...register('captchaToken')} />
+                        <ReCAPTCHA
+                            key={captchaKey}
+                            sitekey={RECAPTCHA_SITE_KEY}
+                            onChange={(token) => setValue('captchaToken', token ?? '', { shouldValidate: true })}
+                            onExpired={() => setValue('captchaToken', '', { shouldValidate: true })}
+                        />
+                        {errors.captchaToken && (
+                            <p className="text-sm text-red-600">{errors.captchaToken.message}</p>
+                        )}
                     </div>
 
                     {formError && <p className="text-sm text-red-600">{formError}</p>}
