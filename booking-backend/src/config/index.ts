@@ -23,6 +23,8 @@ const envSchema = z.object({
         .string()
         .default('false')
         .transform((v) => v === 'true'),
+
+    RECAPTCHA_SECRET_KEY: z.string().min(1, 'RECAPTCHA_SECRET_KEY is required'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -53,3 +55,4 @@ export const JWT_REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 export const BCRYPT_SALT_ROUNDS = env.BCRYPT_SALT_ROUNDS;
 export const MFA_ENCRYPTION_KEY = env.MFA_ENCRYPTION_KEY;
 export const COOKIE_SECURE = env.COOKIE_SECURE;
+export const RECAPTCHA_SECRET_KEY = env.RECAPTCHA_SECRET_KEY;
