@@ -3,6 +3,8 @@ import { loginSchema, registerSchema } from '../validators/auth.validator';
 import { loginUser, registerUser } from '../services/auth.service';
 import { COOKIE_SECURE } from '../config';
 import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS } from '../utils/jwt';
+import { verifyCaptcha } from '../utils/captcha';
+import { AppError } from '../utils/AppError';
 
 const ACCESS_COOKIE_NAME = 'accessToken';
 const REFRESH_COOKIE_NAME = 'refreshToken';
@@ -18,8 +20,17 @@ export async function register(req: Request, res: Response) {
 }
 
 export async function login(req: Request, res: Response) {
-    const { email, password } = loginSchema.parse(req.body);
-    const { user, accessToken, refreshToken } = await loginUser(email, password);
+    const { email, password, captchaToken } = loginSchema.parse(req.body);
+
+    // Verified before any DB lookup or bcrypt comparison — a bot with no valid
+    // token gets rejected cheaply, instead of spending a bcrypt.compare and a
+    // lockout-counter increment on it.
+    const captchaValid = await verifyCaptcha(captchaToken);
+    if (!captchaValid) {
+        throw new AppError('CAPTCHA verification failed', 400);
+    }
+
+    const { user, accessToken, refreshToken } = await loginUser(email, password, req.ip ?? 'unknown');
 
     res.cookie(ACCESS_COOKIE_NAME, accessToken, {
         httpOnly: true,

@@ -14,7 +14,7 @@ const passwordSchema = z
 export const registerSchema = z
     .object({
         fullName: z.string().trim().min(2).max(100),
-        email: z.string().trim().toLowerCase().email(),
+        email: z.email().trim().toLowerCase(),
         username: z
             .string()
             .trim()
@@ -28,8 +28,9 @@ export const registerSchema = z
 
 export const loginSchema = z
     .object({
-        email: z.string().trim().toLowerCase().email(),
+        email: z.email().trim().toLowerCase(),
         password: z.string().min(1, 'Password is required'),
+        captchaToken: z.string().min(1, 'CAPTCHA verification is required'),
     })
     .strict();
 
