@@ -6,9 +6,13 @@ import { NODE_ENV } from '../config';
 // Express 5 forwards thrown/rejected errors from async route handlers here automatically.
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
     if (err instanceof ZodError) {
+        const { fieldErrors, formErrors } = z.flattenError(err);
         res.status(400).json({
             message: 'Validation failed',
-            errors: z.flattenError(err).fieldErrors,
+            errors: fieldErrors,
+            // Catches issues not tied to a specific field, e.g. an unrecognized key
+            // rejected by .strict() — such as a client trying to set `role` directly.
+            ...(formErrors.length > 0 && { formErrors }),
         });
         return;
     }
