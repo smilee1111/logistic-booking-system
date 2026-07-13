@@ -36,10 +36,9 @@ const userSchema = new Schema<IUser>(
     { timestamps: true }
 );
 
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
+userSchema.pre('save', async function () {
+    if (!this.isModified('password')) return;
     this.password = await bcrypt.hash(this.password, BCRYPT_SALT_ROUNDS);
-    next();
 });
 
 userSchema.methods.comparePassword = function (candidate: string): Promise<boolean> {
@@ -48,9 +47,9 @@ userSchema.methods.comparePassword = function (candidate: string): Promise<boole
 
 userSchema.set('toJSON', {
     transform: (_doc, ret) => {
-        delete ret.password;
-        delete ret.mfaSecret;
-        delete ret.__v;
+        Reflect.deleteProperty(ret, 'password');
+        Reflect.deleteProperty(ret, 'mfaSecret');
+        Reflect.deleteProperty(ret, '__v');
         return ret;
     },
 });
