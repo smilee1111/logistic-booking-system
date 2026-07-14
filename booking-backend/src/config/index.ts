@@ -18,6 +18,9 @@ const envSchema = z.object({
     MFA_ENCRYPTION_KEY: z
         .string()
         .regex(/^[0-9a-f]{64}$/i, 'MFA_ENCRYPTION_KEY must be a 32-byte hex string'),
+    CONTACT_ENCRYPTION_KEY: z
+        .string()
+        .regex(/^[0-9a-f]{64}$/i, 'CONTACT_ENCRYPTION_KEY must be a 32-byte hex string'),
 
     COOKIE_SECURE: z
         .string()
@@ -56,5 +59,6 @@ export const JWT_REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 export const MFA_PENDING_SECRET = env.MFA_PENDING_SECRET;
 export const BCRYPT_SALT_ROUNDS = env.BCRYPT_SALT_ROUNDS;
 export const MFA_ENCRYPTION_KEY = env.MFA_ENCRYPTION_KEY;
+export const CONTACT_ENCRYPTION_KEY = env.CONTACT_ENCRYPTION_KEY;
 export const COOKIE_SECURE = env.COOKIE_SECURE;
 export const RECAPTCHA_SECRET_KEY = env.RECAPTCHA_SECRET_KEY;
