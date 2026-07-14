@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import setCookie from 'set-cookie-parser';
-import { backendFetch } from '@/lib/backend';
+import { authenticatedBackendFetch, backendFetch } from '@/lib/backend';
 import type { LoginFormValues, RegisterFormValues } from '@/lib/validators/auth';
 
 export interface AuthUser {
@@ -16,9 +16,15 @@ export interface AuthUser {
 
 export interface AuthActionResult {
     success: boolean;
+    mfaRequired?: boolean;
     message?: string;
     fieldErrors?: Record<string, string[]>;
     user?: AuthUser;
+}
+
+export interface VerifyMfaInput {
+    code?: string;
+    backupCode?: string;
 }
 
 // The backend sets httpOnly cookies scoped to its own origin. Since the browser
@@ -60,6 +66,29 @@ export async function loginAction(values: LoginFormValues): Promise<AuthActionRe
     const response = await backendFetch('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify(values),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        return { success: false, message: data.message, fieldErrors: data.errors };
+    }
+
+    // Relays whatever Set-Cookie headers came back — either the mfaPendingToken
+    // (MFA required) or the real accessToken/refreshToken pair (no MFA needed).
+    await forwardSetCookies(response);
+
+    if (data.mfaRequired) {
+        return { success: true, mfaRequired: true };
+    }
+
+    return { success: true, user: data.user };
+}
+
+export async function verifyMfaLoginAction(input: VerifyMfaInput): Promise<AuthActionResult> {
+    const response = await authenticatedBackendFetch('/api/auth/verify-mfa', {
+        method: 'POST',
+        body: JSON.stringify(input),
     });
 
     const data = await response.json();
