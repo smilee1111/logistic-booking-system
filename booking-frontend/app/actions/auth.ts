@@ -2,8 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import setCookie from 'set-cookie-parser';
-import { authenticatedBackendFetch, backendFetch } from '@/lib/backend';
+import { authenticatedBackendFetch, backendFetch, forwardSetCookies } from '@/lib/backend';
 import type { LoginFormValues, RegisterFormValues } from '@/lib/validators/auth';
 
 export interface AuthUser {
@@ -25,26 +24,6 @@ export interface AuthActionResult {
 export interface VerifyMfaInput {
     code?: string;
     backupCode?: string;
-}
-
-// The backend sets httpOnly cookies scoped to its own origin. Since the browser
-// never talks to the backend directly in this architecture, we relay those
-// Set-Cookie headers onto the Next.js origin so the browser actually receives them.
-async function forwardSetCookies(response: Response): Promise<void> {
-    const setCookieHeaders = response.headers.getSetCookie();
-    if (setCookieHeaders.length === 0) return;
-
-    const cookieStore = await cookies();
-    for (const parsed of setCookie.parse(setCookieHeaders)) {
-        cookieStore.set(parsed.name, parsed.value, {
-            httpOnly: parsed.httpOnly,
-            secure: parsed.secure,
-            sameSite: parsed.sameSite?.toLowerCase() as 'strict' | 'lax' | 'none' | undefined,
-            path: parsed.path,
-            maxAge: parsed.maxAge,
-            expires: parsed.expires,
-        });
-    }
 }
 
 export async function registerAction(values: RegisterFormValues): Promise<AuthActionResult> {
