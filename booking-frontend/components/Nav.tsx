@@ -13,6 +13,9 @@ export function Nav() {
                 Lab &amp; Equipment Booking
             </Link>
             <div className="flex items-center gap-4 text-sm">
+                <Link href="/resources" className="hover:underline">
+                    Resources
+                </Link>
                 {user ? (
                     <>
                         <span>Hi, {user.fullName}</span>
