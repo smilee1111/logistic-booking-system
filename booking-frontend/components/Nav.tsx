@@ -19,6 +19,9 @@ export function Nav() {
                 {user ? (
                     <>
                         <span>Hi, {user.fullName}</span>
+                        <Link href="/bookings" className="hover:underline">
+                            My Bookings
+                        </Link>
                         <Link href="/settings/mfa" className="hover:underline">
                             Two-factor auth
                         </Link>

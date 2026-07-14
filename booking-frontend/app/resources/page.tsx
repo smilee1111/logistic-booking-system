@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getResources } from '@/lib/resources';
 
 export default async function ResourcesPage() {
@@ -40,6 +41,14 @@ export default async function ResourcesPage() {
                                         Requires approval
                                     </span>
                                 )}
+                                <div>
+                                    <Link
+                                        href={`/bookings/new?resourceId=${resource.id}`}
+                                        className="inline-block rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90"
+                                    >
+                                        Book
+                                    </Link>
+                                </div>
                             </li>
                         ))}
                     </ul>

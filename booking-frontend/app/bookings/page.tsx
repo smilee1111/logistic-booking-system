@@ -1,0 +1,67 @@
+import Link from 'next/link';
+import { cancelBookingFormAction, getMyBookingsAction } from '@/app/actions/bookings';
+
+export default async function MyBookingsPage() {
+    const bookings = await getMyBookingsAction();
+
+    return (
+        <main className="flex flex-1 flex-col items-center px-6 py-16">
+            <div className="w-full max-w-3xl space-y-6">
+                <h1 className="text-2xl font-semibold tracking-tight">My bookings</h1>
+
+                {bookings.length === 0 ? (
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        No bookings yet. Browse{' '}
+                        <Link href="/resources" className="underline">
+                            resources
+                        </Link>{' '}
+                        to book one.
+                    </p>
+                ) : (
+                    <ul className="space-y-4">
+                        {bookings.map((booking) => (
+                            <li
+                                key={booking.id}
+                                className="space-y-2 rounded-md border border-black/10 p-4 dark:border-white/15"
+                            >
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-sm font-medium">
+                                        {new Date(booking.startTime).toLocaleString()} —{' '}
+                                        {new Date(booking.endTime).toLocaleString()}
+                                    </span>
+                                    <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 text-xs capitalize dark:bg-white/10">
+                                        {booking.status}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                    Contact: {booking.contactPhone}
+                                </p>
+                                {booking.specialRequests && (
+                                    <div
+                                        className="text-sm text-zinc-600 dark:text-zinc-400"
+                                        // NOTE (intentional, temporary): renders specialRequests as raw HTML
+                                        // instead of relying on React's default text escaping. This is the
+                                        // deliberate stored-XSS surface named in PROJECT_GUIDE.md's pentest
+                                        // plan — fixed in a dedicated commit on Day 5. Do not "clean this up"
+                                        // without checking that plan first.
+                                        dangerouslySetInnerHTML={{ __html: booking.specialRequests }}
+                                    />
+                                )}
+                                {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                                    <form action={cancelBookingFormAction.bind(null, booking.id)}>
+                                        <button
+                                            type="submit"
+                                            className="rounded-md border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </form>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+        </main>
+    );
+}
