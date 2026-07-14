@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
 import { loginSchema, registerSchema } from '../validators/auth.validator';
 import { verifyMfaSchema } from '../validators/mfa.validator';
-import { completeMfaLogin, loginUser, registerUser } from '../services/auth.service';
+import { completeMfaLogin, loginUser, refreshSession, registerUser } from '../services/auth.service';
 import { COOKIE_SECURE } from '../config';
 import { ACCESS_TOKEN_TTL_SECONDS, MFA_PENDING_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS } from '../utils/jwt';
 import { verifyCaptcha } from '../utils/captcha';
@@ -28,6 +28,16 @@ function setSessionCookies(res: Response, accessToken: string, refreshToken: str
         sameSite: 'strict',
         path: '/',
         maxAge: REFRESH_TOKEN_TTL_SECONDS * 1000,
+    });
+}
+
+function setAccessCookie(res: Response, accessToken: string) {
+    res.cookie(ACCESS_COOKIE_NAME, accessToken, {
+        httpOnly: true,
+        secure: COOKIE_SECURE,
+        sameSite: 'strict',
+        path: '/',
+        maxAge: ACCESS_TOKEN_TTL_SECONDS * 1000,
     });
 }
 
@@ -95,6 +105,19 @@ export async function verifyMfa(req: Request, res: Response) {
         message: 'Logged in successfully',
         user: toSessionUser(user),
     });
+}
+
+export async function refresh(req: Request, res: Response) {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+        throw new AppError('No refresh token provided', 401);
+    }
+
+    const { accessToken } = await refreshSession(refreshToken);
+    setAccessCookie(res, accessToken);
+
+    res.status(200).json({ message: 'Session refreshed' });
 }
 
 export async function logout(_req: Request, res: Response) {
