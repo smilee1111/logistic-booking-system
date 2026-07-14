@@ -11,13 +11,13 @@ const envSchema = z.object({
 
     JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
     JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
+    MFA_PENDING_SECRET: z.string().min(32, 'MFA_PENDING_SECRET must be at least 32 characters'),
 
     BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
 
-    MFA_ENCRYPTION_KEY: z.preprocess(
-        (v) => (v === '' ? undefined : v),
-        z.string().regex(/^[0-9a-f]{64}$/i, 'MFA_ENCRYPTION_KEY must be a 32-byte hex string').optional()
-    ),
+    MFA_ENCRYPTION_KEY: z
+        .string()
+        .regex(/^[0-9a-f]{64}$/i, 'MFA_ENCRYPTION_KEY must be a 32-byte hex string'),
 
     COOKIE_SECURE: z
         .string()
@@ -42,8 +42,9 @@ if (env.NODE_ENV === 'production' && !env.COOKIE_SECURE) {
     process.exit(1);
 }
 
-if (env.JWT_SECRET === env.JWT_REFRESH_SECRET) {
-    console.error('JWT_SECRET and JWT_REFRESH_SECRET must be different values');
+const secrets = [env.JWT_SECRET, env.JWT_REFRESH_SECRET, env.MFA_PENDING_SECRET];
+if (new Set(secrets).size !== secrets.length) {
+    console.error('JWT_SECRET, JWT_REFRESH_SECRET, and MFA_PENDING_SECRET must all be different values');
     process.exit(1);
 }
 
@@ -52,6 +53,7 @@ export const PORT = env.PORT;
 export const LOCAL_DATABASE_URI = env.LOCAL_DATABASE_URI;
 export const JWT_SECRET = env.JWT_SECRET;
 export const JWT_REFRESH_SECRET = env.JWT_REFRESH_SECRET;
+export const MFA_PENDING_SECRET = env.MFA_PENDING_SECRET;
 export const BCRYPT_SALT_ROUNDS = env.BCRYPT_SALT_ROUNDS;
 export const MFA_ENCRYPTION_KEY = env.MFA_ENCRYPTION_KEY;
 export const COOKIE_SECURE = env.COOKIE_SECURE;
