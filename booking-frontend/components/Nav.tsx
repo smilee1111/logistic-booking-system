@@ -16,6 +16,9 @@ export function Nav() {
                 {user ? (
                     <>
                         <span>Hi, {user.fullName}</span>
+                        <Link href="/settings/mfa" className="hover:underline">
+                            Two-factor auth
+                        </Link>
                         <form action={logoutAction}>
                             <button
                                 type="submit"

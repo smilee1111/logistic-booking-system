@@ -1,8 +1,16 @@
 import { RegisterInput } from '../validators/auth.validator';
+import { VerifyMfaInput } from '../validators/mfa.validator';
 import { userRepository } from '../repositories/user.repository';
 import { AppError } from '../utils/AppError';
-import { signAccessToken, signRefreshToken } from '../utils/jwt';
+import {
+    signAccessToken,
+    signMfaPendingToken,
+    signRefreshToken,
+    verifyMfaPendingToken,
+    verifyRefreshToken,
+} from '../utils/jwt';
 import { logActivity } from './activityLog.service';
+import { verifyMfaChallenge } from './mfa.service';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -67,11 +75,63 @@ export async function loginUser(email: string, password: string, ipAddress: stri
     user.lockoutUntil = null;
     await user.save();
 
+    if (user.mfaEnabled) {
+        const mfaPendingToken = signMfaPendingToken({ sub: user.id as string });
+        await logActivity({
+            userId: user.id,
+            action: 'login',
+            targetType: 'User',
+            targetId: user.id,
+            ipAddress,
+            metadata: { mfaPending: true },
+        });
+        return { mfaRequired: true as const, mfaPendingToken };
+    }
+
     const payload = { sub: user.id as string, role: user.role };
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
     await logActivity({ userId: user.id, action: 'login', targetType: 'User', targetId: user.id, ipAddress });
+
+    return { mfaRequired: false as const, user, accessToken, refreshToken };
+}
+
+// Reissues the access token only — the refresh token keeps its original expiry,
+// giving every session a hard 7-day cap regardless of how often it's refreshed.
+// Re-fetching the user (rather than trusting the refresh token's embedded role)
+// means a role change is picked up on the next refresh, not just at next login.
+export async function refreshSession(refreshToken: string) {
+    let payload;
+    try {
+        payload = verifyRefreshToken(refreshToken);
+    } catch {
+        throw new AppError('Invalid or expired refresh token — please log in again', 401);
+    }
+
+    const user = await userRepository.findById(payload.sub);
+    if (!user) {
+        throw new AppError('Invalid or expired refresh token — please log in again', 401);
+    }
+
+    const accessToken = signAccessToken({ sub: user.id as string, role: user.role });
+
+    return { accessToken };
+}
+
+export async function completeMfaLogin(mfaPendingToken: string, input: VerifyMfaInput) {
+    let payload;
+    try {
+        payload = verifyMfaPendingToken(mfaPendingToken);
+    } catch {
+        throw new AppError('MFA session expired — please log in again', 401);
+    }
+
+    const user = await verifyMfaChallenge(payload.sub, input);
+
+    const tokenPayload = { sub: user.id as string, role: user.role };
+    const accessToken = signAccessToken(tokenPayload);
+    const refreshToken = signRefreshToken(tokenPayload);
 
     return { user, accessToken, refreshToken };
 }

@@ -28,4 +28,20 @@ export const userRepository = {
     updateRole(id: string, role: 'user' | 'admin') {
         return User.findByIdAndUpdate(id, { role }, { new: true });
     },
+
+    findByIdWithMfaSecrets(id: string) {
+        return User.findById(id).select('+mfaSecret +mfaBackupCodeHashes');
+    },
+
+    setMfaSecret(id: string, encryptedSecret: string) {
+        return User.findByIdAndUpdate(id, { mfaSecret: encryptedSecret }, { new: true });
+    },
+
+    enableMfa(id: string, backupCodeHashes: string[]) {
+        return User.findByIdAndUpdate(id, { mfaEnabled: true, mfaBackupCodeHashes: backupCodeHashes }, { new: true });
+    },
+
+    updateBackupCodeHashes(id: string, hashes: string[]) {
+        return User.findByIdAndUpdate(id, { mfaBackupCodeHashes: hashes });
+    },
 };
