@@ -11,6 +11,7 @@ export interface IUser extends Document {
     phoneNumber: string;
     mfaEnabled: boolean;
     mfaSecret?: string;
+    mfaBackupCodeHashes: string[];
     failedLoginAttempts: number;
     lockoutUntil: Date | null;
     isVerified: boolean;
@@ -29,6 +30,7 @@ const userSchema = new Schema<IUser>(
         phoneNumber: { type: String, required: true, trim: true },
         mfaEnabled: { type: Boolean, default: false },
         mfaSecret: { type: String, select: false },
+        mfaBackupCodeHashes: { type: [String], default: [], select: false },
         failedLoginAttempts: { type: Number, default: 0 },
         lockoutUntil: { type: Date, default: null },
         isVerified: { type: Boolean, default: false },
@@ -49,6 +51,7 @@ userSchema.set('toJSON', {
     transform: (_doc, ret) => {
         Reflect.deleteProperty(ret, 'password');
         Reflect.deleteProperty(ret, 'mfaSecret');
+        Reflect.deleteProperty(ret, 'mfaBackupCodeHashes');
         Reflect.deleteProperty(ret, '__v');
         return ret;
     },
