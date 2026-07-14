@@ -1,37 +1,19 @@
 import { Request, Response } from 'express';
+import type { HydratedDocument } from 'mongoose';
 import { loginSchema, registerSchema } from '../validators/auth.validator';
-import { loginUser, registerUser } from '../services/auth.service';
+import { verifyMfaSchema } from '../validators/mfa.validator';
+import { completeMfaLogin, loginUser, registerUser } from '../services/auth.service';
 import { COOKIE_SECURE } from '../config';
-import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS } from '../utils/jwt';
+import { ACCESS_TOKEN_TTL_SECONDS, MFA_PENDING_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS } from '../utils/jwt';
 import { verifyCaptcha } from '../utils/captcha';
 import { AppError } from '../utils/AppError';
+import type { IUser } from '../models/User';
 
 const ACCESS_COOKIE_NAME = 'accessToken';
 const REFRESH_COOKIE_NAME = 'refreshToken';
+const MFA_PENDING_COOKIE_NAME = 'mfaPendingToken';
 
-export async function register(req: Request, res: Response) {
-    const input = registerSchema.parse(req.body);
-    const user = await registerUser(input);
-
-    res.status(201).json({
-        message: 'Account created successfully',
-        user: { id: user.id, fullName: user.fullName, email: user.email, username: user.username, role: user.role },
-    });
-}
-
-export async function login(req: Request, res: Response) {
-    const { email, password, captchaToken } = loginSchema.parse(req.body);
-
-    // Verified before any DB lookup or bcrypt comparison — a bot with no valid
-    // token gets rejected cheaply, instead of spending a bcrypt.compare and a
-    // lockout-counter increment on it.
-    const captchaValid = await verifyCaptcha(captchaToken);
-    if (!captchaValid) {
-        throw new AppError('CAPTCHA verification failed', 400);
-    }
-
-    const { user, accessToken, refreshToken } = await loginUser(email, password, req.ip ?? 'unknown');
-
+function setSessionCookies(res: Response, accessToken: string, refreshToken: string) {
     res.cookie(ACCESS_COOKIE_NAME, accessToken, {
         httpOnly: true,
         secure: COOKIE_SECURE,
@@ -47,10 +29,71 @@ export async function login(req: Request, res: Response) {
         path: '/',
         maxAge: REFRESH_TOKEN_TTL_SECONDS * 1000,
     });
+}
+
+function toSessionUser(user: HydratedDocument<IUser>) {
+    return { id: user.id, fullName: user.fullName, email: user.email, username: user.username, role: user.role };
+}
+
+export async function register(req: Request, res: Response) {
+    const input = registerSchema.parse(req.body);
+    const user = await registerUser(input);
+
+    res.status(201).json({
+        message: 'Account created successfully',
+        user: toSessionUser(user),
+    });
+}
+
+export async function login(req: Request, res: Response) {
+    const { email, password, captchaToken } = loginSchema.parse(req.body);
+
+    // Verified before any DB lookup or bcrypt comparison — a bot with no valid
+    // token gets rejected cheaply, instead of spending a bcrypt.compare and a
+    // lockout-counter increment on it.
+    const captchaValid = await verifyCaptcha(captchaToken);
+    if (!captchaValid) {
+        throw new AppError('CAPTCHA verification failed', 400);
+    }
+
+    const result = await loginUser(email, password, req.ip ?? 'unknown');
+
+    if (result.mfaRequired) {
+        res.cookie(MFA_PENDING_COOKIE_NAME, result.mfaPendingToken, {
+            httpOnly: true,
+            secure: COOKIE_SECURE,
+            sameSite: 'strict',
+            path: '/',
+            maxAge: MFA_PENDING_TOKEN_TTL_SECONDS * 1000,
+        });
+        res.status(200).json({ mfaRequired: true, message: 'MFA verification required' });
+        return;
+    }
+
+    setSessionCookies(res, result.accessToken, result.refreshToken);
 
     res.status(200).json({
         message: 'Logged in successfully',
-        user: { id: user.id, fullName: user.fullName, email: user.email, username: user.username, role: user.role },
+        user: toSessionUser(result.user),
+    });
+}
+
+export async function verifyMfa(req: Request, res: Response) {
+    const input = verifyMfaSchema.parse(req.body);
+    const mfaPendingToken = req.cookies?.mfaPendingToken;
+
+    if (!mfaPendingToken) {
+        throw new AppError('No pending MFA session — please log in again', 401);
+    }
+
+    const { user, accessToken, refreshToken } = await completeMfaLogin(mfaPendingToken, input);
+
+    res.clearCookie(MFA_PENDING_COOKIE_NAME, { path: '/' });
+    setSessionCookies(res, accessToken, refreshToken);
+
+    res.status(200).json({
+        message: 'Logged in successfully',
+        user: toSessionUser(user),
     });
 }
 
