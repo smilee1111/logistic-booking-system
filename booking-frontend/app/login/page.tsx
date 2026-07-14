@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type SubmitEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { loginSchema, type LoginFormValues } from '@/lib/validators/auth';
-import { loginAction } from '@/app/actions/auth';
+import { loginAction, verifyMfaLoginAction } from '@/app/actions/auth';
 import { useAuth } from '@/context/AuthContext';
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? '';
@@ -17,6 +17,10 @@ export default function LoginPage() {
     const { setUser } = useAuth();
     const [formError, setFormError] = useState<string | null>(null);
     const [captchaKey, setCaptchaKey] = useState(0);
+    const [step, setStep] = useState<'credentials' | 'mfa'>('credentials');
+    const [mfaInput, setMfaInput] = useState('');
+    const [mfaError, setMfaError] = useState<string | null>(null);
+    const [mfaSubmitting, setMfaSubmitting] = useState(false);
 
     const {
         register,
@@ -37,8 +41,72 @@ export default function LoginPage() {
             return;
         }
 
+        if (result.mfaRequired) {
+            setStep('mfa');
+            return;
+        }
+
         setUser(result.user ?? null);
         router.push('/');
+    }
+
+    async function onSubmitMfa(e: SubmitEvent) {
+        e.preventDefault();
+        setMfaError(null);
+        setMfaSubmitting(true);
+
+        // A 6-digit numeric entry is treated as a TOTP code, anything else as a backup code.
+        const input = /^\d{6}$/.test(mfaInput) ? { code: mfaInput } : { backupCode: mfaInput };
+        const result = await verifyMfaLoginAction(input);
+
+        setMfaSubmitting(false);
+
+        if (!result.success) {
+            setMfaError(result.message ?? 'Verification failed');
+            return;
+        }
+
+        setUser(result.user ?? null);
+        router.push('/');
+    }
+
+    if (step === 'mfa') {
+        return (
+            <main className="flex flex-1 items-center justify-center px-6 py-16">
+                <div className="w-full max-w-sm space-y-6">
+                    <h1 className="text-2xl font-semibold tracking-tight">Two-factor verification</h1>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        Enter the 6-digit code from your authenticator app, or one of your backup codes.
+                    </p>
+
+                    <form onSubmit={onSubmitMfa} className="space-y-4" noValidate>
+                        <div className="space-y-1">
+                            <label htmlFor="mfaInput" className="text-sm font-medium">
+                                Code
+                            </label>
+                            <input
+                                id="mfaInput"
+                                type="text"
+                                autoComplete="one-time-code"
+                                value={mfaInput}
+                                onChange={(e) => setMfaInput(e.target.value)}
+                                className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
+                            />
+                        </div>
+
+                        {mfaError && <p className="text-sm text-red-600">{mfaError}</p>}
+
+                        <button
+                            type="submit"
+                            disabled={mfaSubmitting}
+                            className="w-full rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background disabled:opacity-50"
+                        >
+                            {mfaSubmitting ? 'Verifying…' : 'Verify'}
+                        </button>
+                    </form>
+                </div>
+            </main>
+        );
     }
 
     return (
