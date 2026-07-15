@@ -28,6 +28,8 @@ const envSchema = z.object({
         .transform((v) => v === 'true'),
 
     RECAPTCHA_SECRET_KEY: z.string().min(1, 'RECAPTCHA_SECRET_KEY is required'),
+
+    FRONTEND_ORIGIN: z.url().default('http://localhost:3000'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -62,3 +64,4 @@ export const MFA_ENCRYPTION_KEY = env.MFA_ENCRYPTION_KEY;
 export const CONTACT_ENCRYPTION_KEY = env.CONTACT_ENCRYPTION_KEY;
 export const COOKIE_SECURE = env.COOKIE_SECURE;
 export const RECAPTCHA_SECRET_KEY = env.RECAPTCHA_SECRET_KEY;
+export const FRONTEND_ORIGIN = env.FRONTEND_ORIGIN;
