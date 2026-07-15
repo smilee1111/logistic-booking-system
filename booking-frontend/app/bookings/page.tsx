@@ -37,15 +37,13 @@ export default async function MyBookingsPage() {
                                     Contact: {booking.contactPhone}
                                 </p>
                                 {booking.specialRequests && (
-                                    <div
-                                        className="text-sm text-zinc-600 dark:text-zinc-400"
-                                        // NOTE (intentional, temporary): renders specialRequests as raw HTML
-                                        // instead of relying on React's default text escaping. This is the
-                                        // deliberate stored-XSS surface named in PROJECT_GUIDE.md's pentest
-                                        // plan — fixed in a dedicated commit on Day 5. Do not "clean this up"
-                                        // without checking that plan first.
-                                        dangerouslySetInnerHTML={{ __html: booking.specialRequests }}
-                                    />
+                                    // FIXED (was the stored-XSS vulnerability named in PROJECT_GUIDE.md's
+                                    // pentest plan — see VULN_LOG.md for the before/after). Plain JSX
+                                    // interpolation lets React apply its default text escaping instead of
+                                    // injecting raw HTML.
+                                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                        {booking.specialRequests}
+                                    </p>
                                 )}
                                 {(booking.status === 'pending' || booking.status === 'confirmed') && (
                                     <form action={cancelBookingFormAction.bind(null, booking.id)}>
