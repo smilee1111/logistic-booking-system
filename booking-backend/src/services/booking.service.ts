@@ -38,13 +38,10 @@ export async function createBooking(userId: string, input: CreateBookingInput, i
     return booking;
 }
 
-// SECURITY NOTE (intentional, temporary): no ownership/role check here — any
-// authenticated user can fetch any booking by id, including another user's
-// contactPhone and specialRequests. This is the IDOR vulnerability named in
-// PROJECT_GUIDE.md's pentest plan, kept unfixed on purpose for before/after
-// evidence. Fixed in a dedicated commit on Day 5 — do not "clean this up"
-// without checking that plan first.
-export async function getBookingById(id: string) {
+// FIXED (was the IDOR vulnerability named in PROJECT_GUIDE.md's pentest plan —
+// see VULN_LOG.md for the before/after). Owner or admin only; a cross-user
+// request gets 404, not 403, so the response doesn't confirm the booking exists.
+export async function getBookingById(id: string, requester: { sub: string; role: 'user' | 'admin' }) {
     if (!isValidObjectId(id)) {
         throw new AppError('Booking not found', 404);
     }
@@ -53,6 +50,11 @@ export async function getBookingById(id: string) {
     if (!booking) {
         throw new AppError('Booking not found', 404);
     }
+
+    if (booking.userId.toString() !== requester.sub && requester.role !== 'admin') {
+        throw new AppError('Booking not found', 404);
+    }
+
     return booking;
 }
 

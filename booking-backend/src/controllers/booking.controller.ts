@@ -40,7 +40,7 @@ export async function getOne(req: Request, res: Response) {
     if (typeof id !== 'string') {
         throw new AppError('Booking not found', 404);
     }
-    const booking = await getBookingById(id);
+    const booking = await getBookingById(id, req.user!);
     res.status(200).json({ booking: toPublicBooking(booking) });
 }
 
