@@ -11,6 +11,7 @@ import {
 } from '../services/booking.service';
 import { decryptContactPhone } from '../utils/contactEncryption';
 import { AppError } from '../utils/AppError';
+import { toCsv } from '../utils/csv';
 import type { IBooking } from '../models/Booking';
 
 function toPublicBooking(booking: HydratedDocument<IBooking>) {
@@ -47,6 +48,49 @@ export async function getOne(req: Request, res: Response) {
 export async function getMine(req: Request, res: Response) {
     const bookings = await getMyBookings(req.user!.sub);
     res.status(200).json({ bookings: bookings.map(toPublicBooking) });
+}
+
+const EXPORT_COLUMNS = [
+    'id',
+    'resourceId',
+    'startTime',
+    'endTime',
+    'status',
+    'specialRequests',
+    'contactPhone',
+    'createdAt',
+];
+
+// Owner-only export of the requester's own bookings — a privacy/data-portability
+// feature, not an admin one.
+export async function exportMine(req: Request, res: Response) {
+    const format = req.query.format === 'json' ? 'json' : 'csv';
+    const bookings = await getMyBookings(req.user!.sub);
+    const publicBookings = bookings.map(toPublicBooking);
+
+    if (format === 'json') {
+        res.setHeader('Content-Disposition', 'attachment; filename="bookings.json"');
+        res.status(200).json({ bookings: publicBookings });
+        return;
+    }
+
+    const csv = toCsv(
+        publicBookings.map((b) => ({
+            id: b.id,
+            resourceId: String(b.resourceId),
+            startTime: new Date(b.startTime).toISOString(),
+            endTime: new Date(b.endTime).toISOString(),
+            status: b.status,
+            specialRequests: b.specialRequests,
+            contactPhone: b.contactPhone,
+            createdAt: new Date(b.createdAt).toISOString(),
+        })),
+        EXPORT_COLUMNS
+    );
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="bookings.csv"');
+    res.status(200).send(csv);
 }
 
 export async function getAll(_req: Request, res: Response) {
