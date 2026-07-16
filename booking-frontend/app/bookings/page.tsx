@@ -7,7 +7,25 @@ export default async function MyBookingsPage() {
     return (
         <main className="flex flex-1 flex-col items-center px-6 py-16">
             <div className="w-full max-w-3xl space-y-6">
-                <h1 className="text-2xl font-semibold tracking-tight">My bookings</h1>
+                <div className="flex items-center justify-between gap-2">
+                    <h1 className="text-2xl font-semibold tracking-tight">My bookings</h1>
+                    {bookings.length > 0 && (
+                        <div className="flex gap-2 text-sm">
+                            <a
+                                href="/api/bookings/export?format=csv"
+                                className="rounded-md border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                            >
+                                Export CSV
+                            </a>
+                            <a
+                                href="/api/bookings/export?format=json"
+                                className="rounded-md border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                            >
+                                Export JSON
+                            </a>
+                        </div>
+                    )}
+                </div>
 
                 {bookings.length === 0 ? (
                     <p className="text-sm text-zinc-600 dark:text-zinc-400">
