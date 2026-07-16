@@ -9,3 +9,11 @@ export async function getResources(): Promise<Resource[]> {
     const data = await response.json();
     return data.resources ?? [];
 }
+
+export async function getResource(id: string): Promise<Resource | null> {
+    const response = await backendFetch(`/api/resources/${id}`);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    return data.resource ?? null;
+}
