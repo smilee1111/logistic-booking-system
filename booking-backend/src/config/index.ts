@@ -18,6 +18,9 @@ const envSchema = z.object({
     MFA_ENCRYPTION_KEY: z
         .string()
         .regex(/^[0-9a-f]{64}$/i, 'MFA_ENCRYPTION_KEY must be a 32-byte hex string'),
+    CONTACT_ENCRYPTION_KEY: z
+        .string()
+        .regex(/^[0-9a-f]{64}$/i, 'CONTACT_ENCRYPTION_KEY must be a 32-byte hex string'),
 
     COOKIE_SECURE: z
         .string()
@@ -25,6 +28,8 @@ const envSchema = z.object({
         .transform((v) => v === 'true'),
 
     RECAPTCHA_SECRET_KEY: z.string().min(1, 'RECAPTCHA_SECRET_KEY is required'),
+
+    FRONTEND_ORIGIN: z.url().default('http://localhost:3000'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -56,5 +61,7 @@ export const JWT_REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 export const MFA_PENDING_SECRET = env.MFA_PENDING_SECRET;
 export const BCRYPT_SALT_ROUNDS = env.BCRYPT_SALT_ROUNDS;
 export const MFA_ENCRYPTION_KEY = env.MFA_ENCRYPTION_KEY;
+export const CONTACT_ENCRYPTION_KEY = env.CONTACT_ENCRYPTION_KEY;
 export const COOKIE_SECURE = env.COOKIE_SECURE;
 export const RECAPTCHA_SECRET_KEY = env.RECAPTCHA_SECRET_KEY;
+export const FRONTEND_ORIGIN = env.FRONTEND_ORIGIN;
