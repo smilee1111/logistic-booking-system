@@ -25,6 +25,11 @@ export function Nav() {
                         <Link href="/settings/mfa" className="hover:underline">
                             Two-factor auth
                         </Link>
+                        {user.role === 'admin' && (
+                            <Link href="/admin" className="hover:underline">
+                                Admin
+                            </Link>
+                        )}
                         <form action={logoutAction}>
                             <button
                                 type="submit"

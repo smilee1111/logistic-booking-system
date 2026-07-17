@@ -1,0 +1,40 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  backend:
+    build:
+      context: ./booking-backend
+    restart: unless-stopped
+    env_file:
+      - ./booking-backend/src/config/config.env
+    environment:
+      # Overrides config.env's localhost URI — inside the compose network,
+      # Mongo is reachable by service name, not 127.0.0.1.
+      LOCAL_DATABASE_URI: mongodb://mongo:27017/bookio
+    ports:
+      - "5050:5050"
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./booking-frontend
+      args:
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+    restart: unless-stopped
+    environment:
+      # Server-to-server call within the compose network, not the browser-facing origin.
+      BACKEND_API_URL: http://backend:5050
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:

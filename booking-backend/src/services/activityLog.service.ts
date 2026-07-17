@@ -25,3 +25,11 @@ export async function logActivity(input: LogActivityInput): Promise<void> {
         console.error('Failed to write activity log:', error);
     }
 }
+
+const DEFAULT_LOG_LIMIT = 100;
+
+// No pagination UI at this project's scale — most-recent-N is enough for an
+// audit-trail viewer.
+export function listActivity(limit: number = DEFAULT_LOG_LIMIT) {
+    return ActivityLog.find().sort({ timestamp: -1 }).limit(limit);
+}
