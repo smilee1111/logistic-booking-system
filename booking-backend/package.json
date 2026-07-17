@@ -7,6 +7,7 @@
     "dev": "nodemon --watch src -e ts --exec tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "lint": "tsc --noEmit",
     "test": "jest --runInBand"
   },
   "keywords": [],

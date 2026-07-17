@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: booking-backend
+
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      LOCAL_DATABASE_URI: mongodb://127.0.0.1:27017/bookio_test
+      # CI-only placeholders — never used against a real service. CAPTCHA and the
+      # rate limiter are mocked at the Jest module level (see tests/*.test.ts), so
+      # RECAPTCHA_SECRET_KEY's value is never actually sent to Google.
+      JWT_SECRET: c5d93b3e22d3e857666f300e349e954f4115be51ae5369c052acc1f295e5d07c
+      JWT_REFRESH_SECRET: 2c92277e102e771134ed473a7568f23fd199f52b5519d787ccedc1b45f4ecd68
+      MFA_PENDING_SECRET: eec1468b1ab8404272733e70131c8676639edefaec8db9cc7510e9c78fa2b3fc
+      MFA_ENCRYPTION_KEY: 76ee372c0d34ba05535fef738157cd3b4bdf84bed797d9d3bdfdca1fc1a8acec
+      CONTACT_ENCRYPTION_KEY: 2083a97b6dc69d9714c3fab08f8713c01d6157739da4cab05c45df0c762ff4e6
+      RECAPTCHA_SECRET_KEY: ci-placeholder
+      COOKIE_SECURE: 'false'
+      FRONTEND_ORIGIN: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: booking-backend/package-lock.json
+
+      # npm ci's strict lockfile-sync check is unreliable here: @swc/core's optional
+      # WASI-fallback deps (@emnapi/*) drift between resolutions in a way that broke
+      # `npm ci` even right after a clean `npm install` (same issue hit in the
+      # Dockerfiles — see their comments). npm install sidesteps it.
+      - run: npm install
+      - run: npm run lint
+      - run: npm test
+      - run: npm audit --audit-level=high
+      - run: npm run build
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: booking-frontend
+
+    env:
+      # Inlined into the client bundle at build time; never a real key outside
+      # local/prod deploys. The RTL suite mocks the ReCAPTCHA widget entirely.
+      NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ci-placeholder-site-key
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: booking-frontend/package-lock.json
+
+      - run: npm install
+      - run: npm run lint
+      - run: npm test
+      - run: npm audit --audit-level=high
+      - run: npm run build
