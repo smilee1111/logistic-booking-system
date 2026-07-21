@@ -38,6 +38,10 @@ jobs:
       RECAPTCHA_SECRET_KEY: ci-placeholder
       COOKIE_SECURE: 'false'
       FRONTEND_ORIGIN: http://localhost:3000
+      # No test exercises the real Google OAuth exchange — these just satisfy
+      # config validation at boot.
+      GOOGLE_CLIENT_ID: ci-placeholder
+      GOOGLE_CLIENT_SECRET: ci-placeholder
 
     steps:
       - uses: actions/checkout@v4
