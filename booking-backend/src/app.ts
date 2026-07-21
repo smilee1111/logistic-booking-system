@@ -9,6 +9,7 @@ import resourceRoutes from './routes/resource.routes';
 import bookingRoutes from './routes/booking.routes';
 import logRoutes from './routes/log.routes';
 import { errorHandler } from './middlewares/errorHandler';
+import { generalRateLimiter } from './middlewares/rateLimiter';
 import { FRONTEND_ORIGIN } from './config';
 
 const app: Application = express();
@@ -23,6 +24,7 @@ app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(generalRateLimiter);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

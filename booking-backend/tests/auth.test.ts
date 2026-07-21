@@ -12,6 +12,7 @@ jest.mock('../src/utils/captcha', () => ({
 // baking a NODE_ENV bypass into the actual middleware for. Mocked here only.
 jest.mock('../src/middlewares/rateLimiter', () => ({
     authRateLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
+    generalRateLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
 }));
 
 const validUser: TestUser = {
