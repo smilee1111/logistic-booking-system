@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, type SubmitEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, type SubmitEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
@@ -13,11 +13,27 @@ import { useAuth } from '@/context/AuthContext';
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? '';
 
 export default function LoginPage() {
+    return (
+        <Suspense>
+            <LoginForm />
+        </Suspense>
+    );
+}
+
+function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { setUser } = useAuth();
-    const [formError, setFormError] = useState<string | null>(null);
+    // The Google OAuth callback route redirects here (not a client-side action),
+    // so it communicates outcome via query params instead of a return value —
+    // read once as the initial state rather than synced in via an effect.
+    const [formError, setFormError] = useState<string | null>(() =>
+        searchParams.get('error') === 'oauth_failed' ? 'Google sign-in failed. Please try again.' : null,
+    );
     const [captchaKey, setCaptchaKey] = useState(0);
-    const [step, setStep] = useState<'credentials' | 'mfa'>('credentials');
+    const [step, setStep] = useState<'credentials' | 'mfa'>(() =>
+        searchParams.get('mfaRequired') === '1' ? 'mfa' : 'credentials',
+    );
     const [mfaInput, setMfaInput] = useState('');
     const [mfaError, setMfaError] = useState<string | null>(null);
     const [mfaSubmitting, setMfaSubmitting] = useState(false);
@@ -166,6 +182,19 @@ export default function LoginPage() {
                         {isSubmitting ? 'Logging in…' : 'Log in'}
                     </button>
                 </form>
+
+                <div className="flex items-center gap-3 text-xs text-zinc-500">
+                    <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+                    or
+                    <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+                </div>
+
+                <a
+                    href="/api/auth/google"
+                    className="flex w-full items-center justify-center gap-2 rounded-md border border-black/10 px-3 py-2 text-sm font-medium hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                    Sign in with Google
+                </a>
 
                 <p className="text-sm text-zinc-600 dark:text-zinc-400">
                     Don&apos;t have an account?{' '}
