@@ -11,8 +11,9 @@ import {
 } from '../utils/jwt';
 import { logActivity } from './activityLog.service';
 import { verifyMfaChallenge } from './mfa.service';
+import { findOrCreateGoogleUser } from './oauth.service';
 
-const MAX_FAILED_ATTEMPTS = 5;
+const MAX_FAILED_ATTEMPTS = 10;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
 export async function registerUser(input: RegisterInput) {
@@ -22,6 +23,42 @@ export async function registerUser(input: RegisterInput) {
     }
 
     return userRepository.create(input);
+}
+
+// Same shape as loginUser's return value on purpose — the controller and
+// frontend reuse the exact same MFA-pending / session-cookie handling either
+// way, so a Google-linked account with mfaEnabled still can't skip the second
+// factor just by going through OAuth instead of a password.
+export async function loginWithGoogle(code: string, ipAddress: string) {
+    const user = await findOrCreateGoogleUser(code);
+
+    if (user.mfaEnabled) {
+        const mfaPendingToken = signMfaPendingToken({ sub: user.id as string });
+        await logActivity({
+            userId: user.id,
+            action: 'login',
+            targetType: 'User',
+            targetId: user.id,
+            ipAddress,
+            metadata: { mfaPending: true, provider: 'google' },
+        });
+        return { mfaRequired: true as const, mfaPendingToken };
+    }
+
+    const payload = { sub: user.id as string, role: user.role };
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+
+    await logActivity({
+        userId: user.id,
+        action: 'login',
+        targetType: 'User',
+        targetId: user.id,
+        ipAddress,
+        metadata: { provider: 'google' },
+    });
+
+    return { mfaRequired: false as const, user, accessToken, refreshToken };
 }
 
 export async function loginUser(email: string, password: string, ipAddress: string) {
@@ -98,7 +135,7 @@ export async function loginUser(email: string, password: string, ipAddress: stri
 }
 
 // Reissues the access token only — the refresh token keeps its original expiry,
-// giving every session a hard 7-day cap regardless of how often it's refreshed.
+// giving every session a hard 15-day cap regardless of how often it's refreshed.
 // Re-fetching the user (rather than trusting the refresh token's embedded role)
 // means a role change is picked up on the next refresh, not just at next login.
 export async function refreshSession(refreshToken: string) {

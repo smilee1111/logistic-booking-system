@@ -30,6 +30,11 @@ const envSchema = z.object({
     RECAPTCHA_SECRET_KEY: z.string().min(1, 'RECAPTCHA_SECRET_KEY is required'),
 
     FRONTEND_ORIGIN: z.url().default('http://localhost:3000'),
+
+    GOOGLE_CLIENT_ID: z.string().min(1, 'GOOGLE_CLIENT_ID is required'),
+    GOOGLE_CLIENT_SECRET: z.string().min(1, 'GOOGLE_CLIENT_SECRET is required'),
+    // Must exactly match a redirect URI registered in the Google Cloud Console.
+    GOOGLE_REDIRECT_URI: z.url().default('http://localhost:3000/api/auth/google/callback'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -65,3 +70,6 @@ export const CONTACT_ENCRYPTION_KEY = env.CONTACT_ENCRYPTION_KEY;
 export const COOKIE_SECURE = env.COOKIE_SECURE;
 export const RECAPTCHA_SECRET_KEY = env.RECAPTCHA_SECRET_KEY;
 export const FRONTEND_ORIGIN = env.FRONTEND_ORIGIN;
+export const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
+export const GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
+export const GOOGLE_REDIRECT_URI = env.GOOGLE_REDIRECT_URI;

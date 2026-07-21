@@ -97,8 +97,8 @@ describe('POST /api/auth/login', () => {
         expect(accessCookie).toContain('SameSite=Strict');
     });
 
-    it('locks the account after 5 failed attempts, even with the correct password on the 6th', async () => {
-        for (let i = 0; i < 5; i++) {
+    it('locks the account after 10 failed attempts, even with the correct password on the 11th', async () => {
+        for (let i = 0; i < 10; i++) {
             // eslint-disable-next-line no-await-in-loop
             await request(app)
                 .post('/api/auth/login')

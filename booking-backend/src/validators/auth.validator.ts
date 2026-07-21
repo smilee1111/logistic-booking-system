@@ -34,5 +34,12 @@ export const loginSchema = z
     })
     .strict();
 
+export const googleCallbackSchema = z
+    .object({
+        code: z.string().min(1, 'Authorization code is required'),
+    })
+    .strict();
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type GoogleCallbackInput = z.infer<typeof googleCallbackSchema>;

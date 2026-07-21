@@ -5,8 +5,24 @@ export const userRepository = {
         return User.exists({ $or: [{ email }, { username }] });
     },
 
+    existsByUsername(username: string) {
+        return User.exists({ username });
+    },
+
     create(data: Pick<IUser, 'fullName' | 'email' | 'username' | 'password' | 'phoneNumber'>) {
         return User.create(data);
+    },
+
+    findByEmail(email: string) {
+        return User.findOne({ email });
+    },
+
+    createGoogleUser(data: Pick<IUser, 'fullName' | 'email' | 'username' | 'googleId'>) {
+        return User.create({ ...data, authProvider: 'google' });
+    },
+
+    linkGoogleId(id: string, googleId: string) {
+        return User.findByIdAndUpdate(id, { googleId }, { new: true });
     },
 
     findByEmailWithSecrets(email: string) {

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
-import { loginSchema, registerSchema } from '../validators/auth.validator';
+import { googleCallbackSchema, loginSchema, registerSchema } from '../validators/auth.validator';
 import { verifyMfaSchema } from '../validators/mfa.validator';
-import { completeMfaLogin, loginUser, refreshSession, registerUser } from '../services/auth.service';
+import { completeMfaLogin, loginUser, loginWithGoogle, refreshSession, registerUser } from '../services/auth.service';
 import { COOKIE_SECURE } from '../config';
 import { ACCESS_TOKEN_TTL_SECONDS, MFA_PENDING_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS } from '../utils/jwt';
 import { verifyCaptcha } from '../utils/captcha';
@@ -118,6 +118,31 @@ export async function refresh(req: Request, res: Response) {
     setAccessCookie(res, accessToken);
 
     res.status(200).json({ message: 'Session refreshed' });
+}
+
+export async function googleLogin(req: Request, res: Response) {
+    const { code } = googleCallbackSchema.parse(req.body);
+
+    const result = await loginWithGoogle(code, req.ip ?? 'unknown');
+
+    if (result.mfaRequired) {
+        res.cookie(MFA_PENDING_COOKIE_NAME, result.mfaPendingToken, {
+            httpOnly: true,
+            secure: COOKIE_SECURE,
+            sameSite: 'strict',
+            path: '/',
+            maxAge: MFA_PENDING_TOKEN_TTL_SECONDS * 1000,
+        });
+        res.status(200).json({ mfaRequired: true, message: 'MFA verification required' });
+        return;
+    }
+
+    setSessionCookies(res, result.accessToken, result.refreshToken);
+
+    res.status(200).json({
+        message: 'Logged in successfully',
+        user: toSessionUser(result.user),
+    });
 }
 
 export async function logout(_req: Request, res: Response) {
