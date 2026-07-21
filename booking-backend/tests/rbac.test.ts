@@ -10,6 +10,7 @@ jest.mock('../src/utils/captcha', () => ({
 
 jest.mock('../src/middlewares/rateLimiter', () => ({
     authRateLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
+    generalRateLimiter: (_req: unknown, _res: unknown, next: () => void) => next(),
 }));
 
 const baseUser: TestUser = {
