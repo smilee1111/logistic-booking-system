@@ -12,6 +12,10 @@ import {
 import { logActivity } from './activityLog.service';
 import { verifyMfaChallenge } from './mfa.service';
 import { findOrCreateGoogleUser } from './oauth.service';
+import { sendPasswordResetEmail } from './notification.service';
+import { generatePasswordResetToken, hashResetToken } from '../utils/passwordReset';
+import { ForgotPasswordInput, ResetPasswordInput } from '../validators/auth.validator';
+import { FRONTEND_ORIGIN } from '../config';
 
 const MAX_FAILED_ATTEMPTS = 10;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -171,4 +175,55 @@ export async function completeMfaLogin(mfaPendingToken: string, input: VerifyMfa
     const refreshToken = signRefreshToken(tokenPayload);
 
     return { user, accessToken, refreshToken };
+}
+
+// Always resolves successfully whether or not the email matches an account —
+// the controller returns the same generic message either way, so a caller
+// can't use this to enumerate registered emails. Silently no-ops if the email
+// isn't found; no error, no timing-distinguishable path beyond the DB lookup
+// itself.
+export async function requestPasswordReset(input: ForgotPasswordInput, ipAddress: string): Promise<void> {
+    const user = await userRepository.findByEmail(input.email);
+    if (!user) return;
+
+    const { rawToken, tokenHash, expires } = generatePasswordResetToken();
+    await userRepository.setPasswordResetToken(user.id, tokenHash, expires);
+
+    await logActivity({
+        userId: user.id,
+        action: 'password_reset_requested',
+        targetType: 'User',
+        targetId: user.id,
+        ipAddress,
+    });
+
+    const resetLink = `${FRONTEND_ORIGIN}/reset-password?token=${rawToken}`;
+    await sendPasswordResetEmail(user.email, resetLink);
+}
+
+export async function resetPassword(input: ResetPasswordInput, ipAddress: string): Promise<void> {
+    const tokenHash = hashResetToken(input.token);
+    const user = await userRepository.findByValidResetTokenHash(tokenHash);
+
+    if (!user) {
+        throw new AppError('This reset link is invalid or has expired', 400);
+    }
+
+    user.password = input.password;
+    user.passwordResetTokenHash = undefined;
+    user.passwordResetExpires = null;
+    // A password reset is a legitimate account-recovery action — clear any
+    // existing lockout rather than leaving the user locked out of the
+    // password they just proved control of the account to set.
+    user.failedLoginAttempts = 0;
+    user.lockoutUntil = null;
+    await user.save();
+
+    await logActivity({
+        userId: user.id,
+        action: 'password_reset_completed',
+        targetType: 'User',
+        targetId: user.id,
+        ipAddress,
+    });
 }

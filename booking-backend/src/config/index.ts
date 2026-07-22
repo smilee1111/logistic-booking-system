@@ -35,6 +35,12 @@ const envSchema = z.object({
     GOOGLE_CLIENT_SECRET: z.string().min(1, 'GOOGLE_CLIENT_SECRET is required'),
     // Must exactly match a redirect URI registered in the Google Cloud Console.
     GOOGLE_REDIRECT_URI: z.url().default('http://localhost:3000/api/auth/google/callback'),
+
+    SMTP_HOST: z.string().min(1, 'SMTP_HOST is required'),
+    SMTP_PORT: z.coerce.number().int().positive().default(465),
+    SMTP_USER: z.string().min(1, 'SMTP_USER is required'),
+    SMTP_PASSWORD: z.string().min(1, 'SMTP_PASSWORD is required'),
+    EMAIL_FROM: z.string().min(1, 'EMAIL_FROM is required'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -73,3 +79,8 @@ export const FRONTEND_ORIGIN = env.FRONTEND_ORIGIN;
 export const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID;
 export const GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET;
 export const GOOGLE_REDIRECT_URI = env.GOOGLE_REDIRECT_URI;
+export const SMTP_HOST = env.SMTP_HOST;
+export const SMTP_PORT = env.SMTP_PORT;
+export const SMTP_USER = env.SMTP_USER;
+export const SMTP_PASSWORD = env.SMTP_PASSWORD;
+export const EMAIL_FROM = env.EMAIL_FROM;

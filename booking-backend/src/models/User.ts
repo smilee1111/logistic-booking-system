@@ -17,6 +17,8 @@ export interface IUser extends Document {
     failedLoginAttempts: number;
     lockoutUntil: Date | null;
     isVerified: boolean;
+    passwordResetTokenHash?: string;
+    passwordResetExpires?: Date | null;
     createdAt: Date;
     updatedAt: Date;
     comparePassword(candidate: string): Promise<boolean>;
@@ -42,6 +44,10 @@ const userSchema = new Schema<IUser>(
         failedLoginAttempts: { type: Number, default: 0 },
         lockoutUntil: { type: Date, default: null },
         isVerified: { type: Boolean, default: false },
+        // SHA-256, not bcrypt — this is a high-entropy random token, not a
+        // user-chosen secret, so bcrypt's deliberate slowness buys nothing here.
+        passwordResetTokenHash: { type: String, select: false },
+        passwordResetExpires: { type: Date, default: null, select: false },
     },
     { timestamps: true }
 );

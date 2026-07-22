@@ -10,7 +10,9 @@ export type ActivityAction =
     | 'resource_created'
     | 'resource_updated'
     | 'resource_deleted'
-    | 'role_changed';
+    | 'role_changed'
+    | 'password_reset_requested'
+    | 'password_reset_completed';
 
 export interface IActivityLog extends Document {
     userId: mongoose.Types.ObjectId | null;
@@ -38,6 +40,8 @@ const activityLogSchema = new Schema<IActivityLog>({
             'resource_updated',
             'resource_deleted',
             'role_changed',
+            'password_reset_requested',
+            'password_reset_completed',
         ],
     },
     targetType: { type: String, required: true },

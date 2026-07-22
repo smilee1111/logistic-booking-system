@@ -40,6 +40,21 @@ export const googleCallbackSchema = z
     })
     .strict();
 
+export const forgotPasswordSchema = z
+    .object({
+        email: z.email().trim().toLowerCase(),
+    })
+    .strict();
+
+export const resetPasswordSchema = z
+    .object({
+        token: z.string().min(1, 'Reset token is required'),
+        password: passwordSchema,
+    })
+    .strict();
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type GoogleCallbackInput = z.infer<typeof googleCallbackSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

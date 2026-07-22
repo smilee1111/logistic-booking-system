@@ -4,6 +4,7 @@ import { AppError } from '../utils/AppError';
 import { isValidObjectId } from '../utils/objectId';
 import { encryptContactPhone } from '../utils/contactEncryption';
 import { logActivity } from './activityLog.service';
+import { sendBookingConfirmationStub } from './notification.service';
 import { CreateBookingInput, DecisionInput } from '../validators/booking.validator';
 
 export async function createBooking(userId: string, input: CreateBookingInput, ipAddress: string) {
@@ -34,6 +35,10 @@ export async function createBooking(userId: string, input: CreateBookingInput, i
     });
 
     await logActivity({ userId, action: 'booking_created', targetType: 'Booking', targetId: booking.id, ipAddress });
+
+    if (booking.status === 'confirmed') {
+        void sendBookingConfirmationStub(userId, booking.id);
+    }
 
     return booking;
 }
@@ -124,6 +129,10 @@ export async function decideBooking(id: string, input: DecisionInput, adminId: s
         targetId: id,
         ipAddress,
     });
+
+    if (input.decision === 'confirmed') {
+        void sendBookingConfirmationStub(booking.userId.toString(), id);
+    }
 
     return updated!;
 }

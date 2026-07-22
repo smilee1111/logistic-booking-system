@@ -60,4 +60,15 @@ export const userRepository = {
     updateBackupCodeHashes(id: string, hashes: string[]) {
         return User.findByIdAndUpdate(id, { mfaBackupCodeHashes: hashes });
     },
+
+    setPasswordResetToken(id: string, tokenHash: string, expires: Date) {
+        return User.findByIdAndUpdate(id, { passwordResetTokenHash: tokenHash, passwordResetExpires: expires });
+    },
+
+    findByValidResetTokenHash(tokenHash: string) {
+        return User.findOne({
+            passwordResetTokenHash: tokenHash,
+            passwordResetExpires: { $gt: new Date() },
+        }).select('+passwordResetTokenHash +passwordResetExpires');
+    },
 };

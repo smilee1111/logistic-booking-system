@@ -1,8 +1,22 @@
 import { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
-import { googleCallbackSchema, loginSchema, registerSchema } from '../validators/auth.validator';
+import {
+    forgotPasswordSchema,
+    googleCallbackSchema,
+    loginSchema,
+    registerSchema,
+    resetPasswordSchema,
+} from '../validators/auth.validator';
 import { verifyMfaSchema } from '../validators/mfa.validator';
-import { completeMfaLogin, loginUser, loginWithGoogle, refreshSession, registerUser } from '../services/auth.service';
+import {
+    completeMfaLogin,
+    loginUser,
+    loginWithGoogle,
+    refreshSession,
+    registerUser,
+    requestPasswordReset,
+    resetPassword,
+} from '../services/auth.service';
 import { COOKIE_SECURE } from '../config';
 import { ACCESS_TOKEN_TTL_SECONDS, MFA_PENDING_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS } from '../utils/jwt';
 import { verifyCaptcha } from '../utils/captcha';
@@ -149,4 +163,22 @@ export async function logout(_req: Request, res: Response) {
     res.clearCookie(ACCESS_COOKIE_NAME, { path: '/' });
     res.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });
     res.status(200).json({ message: 'Logged out successfully' });
+}
+
+// Always 200 with the same message, whether or not the email matches an
+// account — the service layer enforces this too, but it's repeated here as
+// the actual contract: no branch in this handler may ever depend on whether
+// requestPasswordReset found a user.
+export async function forgotPassword(req: Request, res: Response) {
+    const input = forgotPasswordSchema.parse(req.body);
+    await requestPasswordReset(input, req.ip ?? 'unknown');
+
+    res.status(200).json({ message: 'If that email is registered, a reset link has been sent.' });
+}
+
+export async function resetPasswordHandler(req: Request, res: Response) {
+    const input = resetPasswordSchema.parse(req.body);
+    await resetPassword(input, req.ip ?? 'unknown');
+
+    res.status(200).json({ message: 'Password reset successfully. You can now log in.' });
 }
