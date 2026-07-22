@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { authenticatedBackendFetch, backendFetch, forwardSetCookies } from '@/lib/backend';
-import type { LoginFormValues, RegisterFormValues } from '@/lib/validators/auth';
+import type { ForgotPasswordFormValues, LoginFormValues, RegisterFormValues } from '@/lib/validators/auth';
 
 export interface AuthUser {
     id: string;
@@ -79,6 +79,36 @@ export async function verifyMfaLoginAction(input: VerifyMfaInput): Promise<AuthA
     await forwardSetCookies(response);
 
     return { success: true, user: data.user };
+}
+
+export async function forgotPasswordAction(values: ForgotPasswordFormValues): Promise<AuthActionResult> {
+    const response = await backendFetch('/api/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify(values),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        return { success: false, message: data.message, fieldErrors: data.errors };
+    }
+
+    return { success: true, message: data.message };
+}
+
+export async function resetPasswordAction(token: string, password: string): Promise<AuthActionResult> {
+    const response = await backendFetch('/api/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        return { success: false, message: data.message, fieldErrors: data.errors };
+    }
+
+    return { success: true, message: data.message };
 }
 
 export async function logoutAction(): Promise<void> {

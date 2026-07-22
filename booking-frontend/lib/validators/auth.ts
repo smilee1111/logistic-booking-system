@@ -30,5 +30,15 @@ export const loginSchema = z.object({
     captchaToken: z.string().min(1, 'Please complete the CAPTCHA'),
 });
 
+export const forgotPasswordSchema = z.object({
+    email: z.email('Enter a valid email').trim().toLowerCase(),
+});
+
+export const resetPasswordSchema = z.object({
+    password: passwordSchema,
+});
+
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 export type LoginFormValues = z.infer<typeof loginSchema>;
+export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
