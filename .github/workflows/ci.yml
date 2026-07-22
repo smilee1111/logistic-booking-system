@@ -42,6 +42,12 @@ jobs:
       # config validation at boot.
       GOOGLE_CLIENT_ID: ci-placeholder
       GOOGLE_CLIENT_SECRET: ci-placeholder
+      # Same story — no test sends a real email, this just satisfies config
+      # validation at boot. The mailer transport is never actually invoked.
+      SMTP_HOST: smtp.example.com
+      SMTP_USER: ci-placeholder
+      SMTP_PASSWORD: ci-placeholder
+      EMAIL_FROM: "CI Placeholder <ci-placeholder@example.com>"
 
     steps:
       - uses: actions/checkout@v4
