@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { CheckCircle2, KeyRound, TriangleAlert } from 'lucide-react';
 import { resetPasswordSchema, type ResetPasswordFormValues } from '@/lib/validators/auth';
 import { resetPasswordAction } from '@/app/actions/auth';
 
@@ -51,11 +52,14 @@ function ResetPasswordForm() {
     if (!token) {
         return (
             <main className="flex flex-1 items-center justify-center px-6 py-16">
-                <div className="w-full max-w-sm space-y-4 text-center">
+                <div className="card w-full max-w-sm space-y-4 p-8 text-center">
+                    <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-(--danger-bg) text-(--danger)">
+                        <TriangleAlert className="h-5 w-5" />
+                    </span>
                     <h1 className="text-2xl font-semibold tracking-tight">Invalid reset link</h1>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    <p className="text-sm text-(--muted)">
                         This link is missing its token.{' '}
-                        <Link href="/forgot-password" className="underline">
+                        <Link href="/forgot-password" className="link">
                             Request a new one
                         </Link>
                         .
@@ -68,11 +72,12 @@ function ResetPasswordForm() {
     if (done) {
         return (
             <main className="flex flex-1 items-center justify-center px-6 py-16">
-                <div className="w-full max-w-sm space-y-4 text-center">
+                <div className="card w-full max-w-sm space-y-4 p-8 text-center">
+                    <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-(--success-bg) text-(--success)">
+                        <CheckCircle2 className="h-5 w-5" />
+                    </span>
                     <h1 className="text-2xl font-semibold tracking-tight">Password reset</h1>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        Redirecting you to log in…
-                    </p>
+                    <p className="text-sm text-(--muted)">Redirecting you to log in…</p>
                 </div>
             </main>
         );
@@ -80,9 +85,14 @@ function ResetPasswordForm() {
 
     return (
         <main className="flex flex-1 items-center justify-center px-6 py-16">
-            <div className="w-full max-w-sm space-y-6">
-                <h1 className="text-2xl font-semibold tracking-tight">Reset password</h1>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">Enter a new password for your account.</p>
+            <div className="card w-full max-w-sm space-y-6 p-8">
+                <div className="space-y-1.5">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-(--primary)/10 text-(--primary)">
+                        <KeyRound className="h-5 w-5" />
+                    </span>
+                    <h1 className="pt-1 text-2xl font-semibold tracking-tight">Reset password</h1>
+                    <p className="text-sm text-(--muted)">Enter a new password for your account.</p>
+                </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
                     <div className="space-y-1">
@@ -93,22 +103,20 @@ function ResetPasswordForm() {
                             id="password"
                             type="password"
                             autoComplete="new-password"
-                            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
+                            className="input"
                             {...register('password')}
                         />
-                        {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
-                        <p className="text-xs text-zinc-500">
+                        {errors.password && <p className="text-sm text-(--danger)">{errors.password.message}</p>}
+                        <p className="text-xs text-(--muted)">
                             At least 10 characters, with uppercase, lowercase, a number, and a symbol.
                         </p>
                     </div>
 
-                    {formError && <p className="text-sm text-red-600">{formError}</p>}
+                    {formError && (
+                        <p className="rounded-lg bg-(--danger-bg) px-3 py-2 text-sm text-(--danger)">{formError}</p>
+                    )}
 
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background disabled:opacity-50"
-                    >
+                    <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full">
                         {isSubmitting ? 'Resetting…' : 'Reset password'}
                     </button>
                 </form>

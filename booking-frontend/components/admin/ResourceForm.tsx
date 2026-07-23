@@ -56,37 +56,23 @@ export function ResourceForm({ mode, resourceId, defaultValues }: ResourceFormPr
                 <label htmlFor="name" className="text-sm font-medium">
                     Name
                 </label>
-                <input
-                    id="name"
-                    type="text"
-                    className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
-                    {...register('name')}
-                />
-                {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+                <input id="name" type="text" className="input" {...register('name')} />
+                {errors.name && <p className="text-sm text-(--danger)">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-1">
                 <label htmlFor="description" className="text-sm font-medium">
                     Description
                 </label>
-                <textarea
-                    id="description"
-                    rows={3}
-                    className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
-                    {...register('description')}
-                />
-                {errors.description && <p className="text-sm text-red-600">{errors.description.message}</p>}
+                <textarea id="description" rows={3} className="input" {...register('description')} />
+                {errors.description && <p className="text-sm text-(--danger)">{errors.description.message}</p>}
             </div>
 
             <div className="space-y-1">
                 <label htmlFor="category" className="text-sm font-medium">
                     Category
                 </label>
-                <select
-                    id="category"
-                    className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
-                    {...register('category')}
-                >
+                <select id="category" className="input" {...register('category')}>
                     <option value="lab">Lab</option>
                     <option value="equipment">Equipment</option>
                     <option value="room">Room</option>
@@ -97,13 +83,8 @@ export function ResourceForm({ mode, resourceId, defaultValues }: ResourceFormPr
                 <label htmlFor="location" className="text-sm font-medium">
                     Location
                 </label>
-                <input
-                    id="location"
-                    type="text"
-                    className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
-                    {...register('location')}
-                />
-                {errors.location && <p className="text-sm text-red-600">{errors.location.message}</p>}
+                <input id="location" type="text" className="input" {...register('location')} />
+                {errors.location && <p className="text-sm text-(--danger)">{errors.location.message}</p>}
             </div>
 
             <div className="space-y-1">
@@ -114,33 +95,36 @@ export function ResourceForm({ mode, resourceId, defaultValues }: ResourceFormPr
                     id="capacity"
                     type="number"
                     min={1}
-                    className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
+                    className="input"
                     {...register('capacity', { valueAsNumber: true })}
                 />
-                {errors.capacity && <p className="text-sm text-red-600">{errors.capacity.message}</p>}
+                {errors.capacity && <p className="text-sm text-(--danger)">{errors.capacity.message}</p>}
             </div>
 
             <div className="flex items-center gap-2">
-                <input id="requiresApproval" type="checkbox" className="h-4 w-4" {...register('requiresApproval')} />
+                <input
+                    id="requiresApproval"
+                    type="checkbox"
+                    className="h-4 w-4 accent-(--primary)"
+                    {...register('requiresApproval')}
+                />
                 <label htmlFor="requiresApproval" className="text-sm">
                     Requires admin approval
                 </label>
             </div>
 
             <div className="flex items-center gap-2">
-                <input id="isActive" type="checkbox" className="h-4 w-4" {...register('isActive')} />
+                <input id="isActive" type="checkbox" className="h-4 w-4 accent-(--primary)" {...register('isActive')} />
                 <label htmlFor="isActive" className="text-sm">
                     Active (visible to users)
                 </label>
             </div>
 
-            {formError && <p className="text-sm text-red-600">{formError}</p>}
+            {formError && (
+                <p className="rounded-lg bg-(--danger-bg) px-3 py-2 text-sm text-(--danger)">{formError}</p>
+            )}
 
-            <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background disabled:opacity-50"
-            >
+            <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full">
                 {isSubmitting ? 'Saving…' : mode === 'create' ? 'Create resource' : 'Save changes'}
             </button>
         </form>

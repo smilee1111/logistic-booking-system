@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8f9fc;
+  --surface: #ffffff;
+  --foreground: #16181d;
+  --muted: #6b7280;
+  --border: #e4e6ec;
+
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-foreground: #ffffff;
+
+  --success: #059669;
+  --success-bg: #ecfdf5;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --info: #2563eb;
+  --info-bg: #eff6ff;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0b0c0f;
+    --surface: #17181d;
+    --foreground: #f2f3f5;
+    --muted: #9ba1ac;
+    --border: #2a2c33;
+
+    --primary: #818cf8;
+    --primary-hover: #a5b0fb;
+    --primary-foreground: #14152b;
+
+    --success: #34d399;
+    --success-bg: rgba(52, 211, 153, 0.12);
+    --warning: #fbbf24;
+    --warning-bg: rgba(251, 191, 36, 0.12);
+    --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.12);
+    --info: #60a5fa;
+    --info-bg: rgba(96, 165, 250, 0.12);
   }
+}
+
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Reusable component classes — keeps every page's markup consistent instead of
+   re-deriving the same button/card/input styling with ad-hoc utility strings. */
+@layer components {
+  .card {
+    @apply rounded-xl border border-(--border) bg-(--surface) shadow-sm shadow-black/[0.03] dark:shadow-black/20;
+  }
+
+  /* Applied together in JSX, e.g. class="btn btn-primary" — Tailwind v4 doesn't
+     allow @apply to reference another custom component class, only real utilities. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-medium
+      transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-(--primary) text-(--primary-foreground) hover:bg-(--primary-hover);
+  }
+
+  .btn-secondary {
+    @apply border border-(--border) bg-(--surface) text-(--foreground) hover:bg-black/[0.03] dark:hover:bg-white/[0.06];
+  }
+
+  .btn-danger {
+    @apply bg-(--danger) text-white hover:opacity-90;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-(--border) bg-(--surface) px-3 py-2 text-sm text-(--foreground)
+      transition-shadow duration-150 placeholder:text-(--muted)
+      focus:border-(--primary) focus:outline-none focus:ring-2 focus:ring-(--primary)/25;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize;
+  }
+
+  .badge-neutral {
+    @apply bg-black/[0.05] text-(--muted) dark:bg-white/[0.08];
+  }
+
+  .badge-success {
+    @apply bg-(--success-bg) text-(--success);
+  }
+
+  .badge-warning {
+    @apply bg-(--warning-bg) text-(--warning);
+  }
+
+  .badge-danger {
+    @apply bg-(--danger-bg) text-(--danger);
+  }
+
+  .badge-info {
+    @apply bg-(--info-bg) text-(--info);
+  }
+
+  .link {
+    @apply text-(--primary) underline-offset-4 hover:underline;
+  }
 }

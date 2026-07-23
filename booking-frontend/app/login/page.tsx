@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import { KeyRound, ShieldCheck } from 'lucide-react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { loginSchema, type LoginFormValues } from '@/lib/validators/auth';
 import { loginAction, verifyMfaLoginAction } from '@/app/actions/auth';
@@ -89,11 +90,16 @@ function LoginForm() {
     if (step === 'mfa') {
         return (
             <main className="flex flex-1 items-center justify-center px-6 py-16">
-                <div className="w-full max-w-sm space-y-6">
-                    <h1 className="text-2xl font-semibold tracking-tight">Two-factor verification</h1>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        Enter the 6-digit code from your authenticator app, or one of your backup codes.
-                    </p>
+                <div className="card w-full max-w-sm space-y-6 p-8">
+                    <div className="space-y-1.5">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-(--primary)/10 text-(--primary)">
+                            <ShieldCheck className="h-5 w-5" />
+                        </span>
+                        <h1 className="pt-1 text-2xl font-semibold tracking-tight">Two-factor verification</h1>
+                        <p className="text-sm text-(--muted)">
+                            Enter the 6-digit code from your authenticator app, or one of your backup codes.
+                        </p>
+                    </div>
 
                     <form onSubmit={onSubmitMfa} className="space-y-4" noValidate>
                         <div className="space-y-1">
@@ -106,17 +112,17 @@ function LoginForm() {
                                 autoComplete="one-time-code"
                                 value={mfaInput}
                                 onChange={(e) => setMfaInput(e.target.value)}
-                                className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
+                                className="input"
                             />
                         </div>
 
-                        {mfaError && <p className="text-sm text-red-600">{mfaError}</p>}
+                        {mfaError && (
+                            <p className="rounded-lg bg-(--danger-bg) px-3 py-2 text-sm text-(--danger)">
+                                {mfaError}
+                            </p>
+                        )}
 
-                        <button
-                            type="submit"
-                            disabled={mfaSubmitting}
-                            className="w-full rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background disabled:opacity-50"
-                        >
+                        <button type="submit" disabled={mfaSubmitting} className="btn btn-primary w-full">
                             {mfaSubmitting ? 'Verifying…' : 'Verify'}
                         </button>
                     </form>
@@ -127,22 +133,21 @@ function LoginForm() {
 
     return (
         <main className="flex flex-1 items-center justify-center px-6 py-16">
-            <div className="w-full max-w-sm space-y-6">
-                <h1 className="text-2xl font-semibold tracking-tight">Log in</h1>
+            <div className="card w-full max-w-sm space-y-6 p-8">
+                <div className="space-y-1.5">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-(--primary)/10 text-(--primary)">
+                        <KeyRound className="h-5 w-5" />
+                    </span>
+                    <h1 className="pt-1 text-2xl font-semibold tracking-tight">Log in</h1>
+                </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
                     <div className="space-y-1">
                         <label htmlFor="email" className="text-sm font-medium">
                             Email
                         </label>
-                        <input
-                            id="email"
-                            type="email"
-                            autoComplete="email"
-                            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
-                            {...register('email')}
-                        />
-                        {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
+                        <input id="email" type="email" autoComplete="email" className="input" {...register('email')} />
+                        {errors.email && <p className="text-sm text-(--danger)">{errors.email.message}</p>}
                     </div>
 
                     <div className="space-y-1">
@@ -150,7 +155,7 @@ function LoginForm() {
                             <label htmlFor="password" className="text-sm font-medium">
                                 Password
                             </label>
-                            <Link href="/forgot-password" className="text-xs underline text-zinc-600 dark:text-zinc-400">
+                            <Link href="/forgot-password" className="link text-xs">
                                 Forgot password?
                             </Link>
                         </div>
@@ -158,10 +163,10 @@ function LoginForm() {
                             id="password"
                             type="password"
                             autoComplete="current-password"
-                            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
+                            className="input"
                             {...register('password')}
                         />
-                        {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
+                        {errors.password && <p className="text-sm text-(--danger)">{errors.password.message}</p>}
                     </div>
 
                     <div className="space-y-1">
@@ -173,37 +178,32 @@ function LoginForm() {
                             onExpired={() => setValue('captchaToken', '', { shouldValidate: true })}
                         />
                         {errors.captchaToken && (
-                            <p className="text-sm text-red-600">{errors.captchaToken.message}</p>
+                            <p className="text-sm text-(--danger)">{errors.captchaToken.message}</p>
                         )}
                     </div>
 
-                    {formError && <p className="text-sm text-red-600">{formError}</p>}
+                    {formError && (
+                        <p className="rounded-lg bg-(--danger-bg) px-3 py-2 text-sm text-(--danger)">{formError}</p>
+                    )}
 
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background disabled:opacity-50"
-                    >
+                    <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full">
                         {isSubmitting ? 'Logging in…' : 'Log in'}
                     </button>
                 </form>
 
-                <div className="flex items-center gap-3 text-xs text-zinc-500">
-                    <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+                <div className="flex items-center gap-3 text-xs text-(--muted)">
+                    <div className="h-px flex-1 bg-(--border)" />
                     or
-                    <div className="h-px flex-1 bg-black/10 dark:bg-white/10" />
+                    <div className="h-px flex-1 bg-(--border)" />
                 </div>
 
-                <a
-                    href="/api/auth/google"
-                    className="flex w-full items-center justify-center gap-2 rounded-md border border-black/10 px-3 py-2 text-sm font-medium hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-                >
+                <a href="/api/auth/google" className="btn btn-secondary w-full">
                     Sign in with Google
                 </a>
 
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="text-sm text-(--muted)">
                     Don&apos;t have an account?{' '}
-                    <Link href="/register" className="underline">
+                    <Link href="/register" className="link">
                         Register
                     </Link>
                 </p>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import { UserPlus } from 'lucide-react';
 import { registerSchema, type RegisterFormValues } from '@/lib/validators/auth';
 import { registerAction } from '@/app/actions/auth';
 
@@ -40,36 +41,29 @@ export default function RegisterPage() {
 
     return (
         <main className="flex flex-1 items-center justify-center px-6 py-16">
-            <div className="w-full max-w-sm space-y-6">
-                <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
+            <div className="card w-full max-w-sm space-y-6 p-8">
+                <div className="space-y-1.5">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-(--primary)/10 text-(--primary)">
+                        <UserPlus className="h-5 w-5" />
+                    </span>
+                    <h1 className="pt-1 text-2xl font-semibold tracking-tight">Create an account</h1>
+                </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
                     <div className="space-y-1">
                         <label htmlFor="fullName" className="text-sm font-medium">
                             Full name
                         </label>
-                        <input
-                            id="fullName"
-                            type="text"
-                            autoComplete="name"
-                            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
-                            {...register('fullName')}
-                        />
-                        {errors.fullName && <p className="text-sm text-red-600">{errors.fullName.message}</p>}
+                        <input id="fullName" type="text" autoComplete="name" className="input" {...register('fullName')} />
+                        {errors.fullName && <p className="text-sm text-(--danger)">{errors.fullName.message}</p>}
                     </div>
 
                     <div className="space-y-1">
                         <label htmlFor="email" className="text-sm font-medium">
                             Email
                         </label>
-                        <input
-                            id="email"
-                            type="email"
-                            autoComplete="email"
-                            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
-                            {...register('email')}
-                        />
-                        {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
+                        <input id="email" type="email" autoComplete="email" className="input" {...register('email')} />
+                        {errors.email && <p className="text-sm text-(--danger)">{errors.email.message}</p>}
                     </div>
 
                     <div className="space-y-1">
@@ -80,10 +74,10 @@ export default function RegisterPage() {
                             id="username"
                             type="text"
                             autoComplete="username"
-                            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
+                            className="input"
                             {...register('username')}
                         />
-                        {errors.username && <p className="text-sm text-red-600">{errors.username.message}</p>}
+                        {errors.username && <p className="text-sm text-(--danger)">{errors.username.message}</p>}
                     </div>
 
                     <div className="space-y-1">
@@ -94,10 +88,10 @@ export default function RegisterPage() {
                             id="phoneNumber"
                             type="tel"
                             autoComplete="tel"
-                            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
+                            className="input"
                             {...register('phoneNumber')}
                         />
-                        {errors.phoneNumber && <p className="text-sm text-red-600">{errors.phoneNumber.message}</p>}
+                        {errors.phoneNumber && <p className="text-sm text-(--danger)">{errors.phoneNumber.message}</p>}
                     </div>
 
                     <div className="space-y-1">
@@ -108,29 +102,27 @@ export default function RegisterPage() {
                             id="password"
                             type="password"
                             autoComplete="new-password"
-                            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/15 dark:bg-transparent"
+                            className="input"
                             {...register('password')}
                         />
-                        {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
-                        <p className="text-xs text-zinc-500">
+                        {errors.password && <p className="text-sm text-(--danger)">{errors.password.message}</p>}
+                        <p className="text-xs text-(--muted)">
                             At least 10 characters, with uppercase, lowercase, a number, and a symbol.
                         </p>
                     </div>
 
-                    {formError && <p className="text-sm text-red-600">{formError}</p>}
+                    {formError && (
+                        <p className="rounded-lg bg-(--danger-bg) px-3 py-2 text-sm text-(--danger)">{formError}</p>
+                    )}
 
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background disabled:opacity-50"
-                    >
+                    <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full">
                         {isSubmitting ? 'Creating account…' : 'Create account'}
                     </button>
                 </form>
 
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="text-sm text-(--muted)">
                     Already have an account?{' '}
-                    <Link href="/login" className="underline">
+                    <Link href="/login" className="link">
                         Log in
                     </Link>
                 </p>

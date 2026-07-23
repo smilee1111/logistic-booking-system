@@ -37,7 +37,7 @@ describe('Nav', () => {
             </AuthProvider>,
         );
 
-        expect(screen.getByText(/Hi, Jane Doe/)).toBeInTheDocument();
+        expect(screen.getByText('Jane Doe')).toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'My Bookings' })).toBeInTheDocument();
         expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
     });

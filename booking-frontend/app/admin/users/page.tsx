@@ -1,3 +1,4 @@
+import { ShieldCheck } from 'lucide-react';
 import { changeUserRoleAction, getAllUsersAction } from '@/app/actions/admin/users';
 import { getCurrentUser } from '@/lib/session';
 
@@ -14,18 +15,16 @@ export default async function AdminUsersPage() {
                         const isSelf = user.id === currentUser?.id;
                         const nextRole = user.role === 'admin' ? 'user' : 'admin';
                         return (
-                            <li
-                                key={user.id}
-                                className="flex items-center justify-between gap-4 rounded-md border border-black/10 p-4 dark:border-white/15"
-                            >
+                            <li key={user.id} className="card flex items-center justify-between gap-4 p-4">
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium">{user.fullName}</span>
-                                        <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs capitalize dark:bg-white/10">
+                                        <span className={`badge ${user.role === 'admin' ? 'badge-info' : 'badge-neutral'}`}>
+                                            {user.role === 'admin' && <ShieldCheck className="h-3 w-3" />}
                                             {user.role}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                    <p className="text-sm text-(--muted)">
                                         {user.email} · @{user.username}
                                     </p>
                                 </div>
@@ -33,7 +32,7 @@ export default async function AdminUsersPage() {
                                     <button
                                         type="submit"
                                         disabled={isSelf}
-                                        className="rounded-md border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 disabled:opacity-40 disabled:hover:bg-transparent dark:border-white/10 dark:hover:bg-white/10"
+                                        className="btn btn-secondary px-3 py-1.5 text-xs"
                                         title={isSelf ? "You can't change your own role" : undefined}
                                     >
                                         Make {nextRole}
