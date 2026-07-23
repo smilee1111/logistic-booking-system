@@ -12,4 +12,7 @@ export interface Booking {
     decidedBy: string | null;
     createdAt: string;
     updatedAt: string;
+    // Only populated on the admin listing (GET /api/bookings) — absent elsewhere.
+    userName?: string | null;
+    resourceName?: string | null;
 }

@@ -93,9 +93,31 @@ export async function exportMine(req: Request, res: Response) {
     res.status(200).send(csv);
 }
 
+interface PopulatedRef {
+    _id: unknown;
+    fullName?: string;
+    name?: string;
+}
+
+// Only used for the admin listing, where userId/resourceId are populated
+// (see booking.repository.ts findAll) — every other endpoint still returns
+// plain ObjectIds via toPublicBooking.
+function toAdminBooking(booking: HydratedDocument<IBooking>) {
+    const user = booking.userId as unknown as PopulatedRef;
+    const resource = booking.resourceId as unknown as PopulatedRef;
+
+    return {
+        ...toPublicBooking(booking),
+        userId: String(user._id),
+        userName: user.fullName ?? null,
+        resourceId: String(resource._id),
+        resourceName: resource.name ?? null,
+    };
+}
+
 export async function getAll(_req: Request, res: Response) {
     const bookings = await getAllBookings();
-    res.status(200).json({ bookings: bookings.map(toPublicBooking) });
+    res.status(200).json({ bookings: bookings.map(toAdminBooking) });
 }
 
 export async function cancel(req: Request, res: Response) {

@@ -35,8 +35,14 @@ export const bookingRepository = {
         return Booking.find({ userId }).select('+contactPhone').sort({ startTime: -1 });
     },
 
+    // Populated for the admin listing only — every other read path (findById,
+    // findByUser) stays plain ObjectIds, so their response shape is unaffected.
     findAll() {
-        return Booking.find().select('+contactPhone').sort({ startTime: -1 });
+        return Booking.find()
+            .select('+contactPhone')
+            .populate('userId', 'fullName email')
+            .populate('resourceId', 'name')
+            .sort({ startTime: -1 });
     },
 
     updateStatus(id: string, status: BookingStatus, decidedBy: string | null) {

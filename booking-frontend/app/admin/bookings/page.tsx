@@ -36,7 +36,8 @@ export default async function AdminBookingsPage() {
                                     </span>
                                 </div>
                                 <p className="text-xs text-(--muted)">
-                                    Resource: {booking.resourceId} · User: {booking.userId}
+                                    Resource: {booking.resourceName ?? booking.resourceId} · User:{' '}
+                                    {booking.userName ?? booking.userId}
                                 </p>
                                 <p className="text-sm text-(--muted)">Contact: {booking.contactPhone}</p>
                                 {booking.specialRequests && (
